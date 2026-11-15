@@ -100,4 +100,4 @@ def attendance_page():
     return FileResponse(os.path.join(BASE_DIR, "attendance.html"))
     
 from fastapi.staticfiles import StaticFiles
-app.mount("/uploads", StaticFiles(directory="/storage/emulated/0/School management/uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
