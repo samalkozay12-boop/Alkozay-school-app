@@ -33,7 +33,7 @@ def create_student(data: StudentCreate, current_user: dict = Depends(get_current
 
         
         conn.execute('''
-            INSERT INTO student_logins (student_id, username, password)
+            INSERT INTO student_login (student_id, username, password)
             VALUES (?, ?, ?)
         ''', (new_student_id, data.username, data.password))
 
