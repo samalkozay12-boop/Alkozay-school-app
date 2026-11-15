@@ -50,3 +50,17 @@ from database import create_tables
 def fix_database():
     create_tables()
     return {"message": "Database tables created/updated successfully!"}
+    
+@router.get('/fix-classes')
+def fix_classes():
+    with get_connection() as conn:
+        conn.execute('DROP TABLE IF EXISTS classes')
+        conn.execute('''
+        CREATE TABLE classes(
+            id INTEGER PRIMARY KEY,
+            class_name TEXT NOT NULL,
+            teacher_id INTEGER NOT NULL,
+            FOREIGN KEY(teacher_id) REFERENCES teachers(id)
+        )
+        ''')
+        return {"message": "جدول classes بازسازی شد!"}
