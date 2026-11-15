@@ -3,67 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد مدیریت</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
-        body { background-color: #f4f6f8; padding: 20px; color: #333; }
-        
-        /* استایل نوار بالای صفحه (پروفایل) */
-        .top-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; position: relative; }
-        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; }
-        .avatar { width: 35px; height: 35px; background: #2c3e50; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-        .profile-menu { display: none; position: absolute; top: 50px; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; width: 150px; }
-        .profile-menu a { display: block; padding: 10px; text-decoration: none; color: #333; font-size: 14px; text-align: right; }
-        .profile-menu a:hover { background: #f4f6f8; }
-
-        /* منو */
-        .nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .nav a { text-decoration: none; background: #fff; color: #555; padding: 8px 16px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; transition: 0.2s; }
-        .nav a:hover { background: #eee; }
-        .nav a.active { background: #2c3e50; color: white; border-color: #2c3e50; }
-
-        h1 { color: #2c3e50; text-align: right; font-size: 22px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-
-        /* کارت‌های آمار (ساده و اداری) */
-        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 20px; border-radius: 6px; border: 1px solid #e0e0e0; text-align: center; }
-        .stat-card .number { font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
-        .stat-card .label { font-size: 13px; color: #777; }
-
-        /* بخش‌های دو ستونه */
-        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media (min-width: 600px) {
-            .stats { grid-template-columns: repeat(5, 1fr); }
-            .grid-2 { grid-template-columns: 1fr 1fr; }
-        }
-
-        .box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #e0e0e0; }
-        .box h3 { color: #2c3e50; font-size: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .list-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .list-item:last-child { border-bottom: none; }
-        .list-item .val { font-weight: bold; color: #2c3e50; }
-
-        /* نمودار خطی ساده */
-        .bar-container { margin-bottom: 15px; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: #555; }
-        .bar-bg { background: #eee; height: 8px; width: 100%; border-radius: 2px; }
-        .bar-fill { background: #2c3e50; height: 100%; border-radius: 2px; transition: width 0.5s ease; }
-    </style>
+    <title>داشبورد - Alkozay School App</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <!-- نوار بالای صفحه (پروفایل و خروج) -->
-    <div class="top-header">
-        <div class="user-profile" onclick="toggleProfileMenu()">
-            <span id="profileName">در حال بارگذاری...</span>
-            <div class="avatar" id="avatarLetter">U</div>
+    <!-- منوی کناری -->
+    <div class="sidebar">
+        <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #334155;">
+            <h2 style="color: white; font-size: 18px;">Alkozay School</h2>
         </div>
-        <div class="profile-menu" id="profileMenu">
-            <a href="#" onclick="logout()" style="color: #e74c3c;">خروج از حساب</a>
-        </div>
-    </div>
-
-    <!-- منوی اصلی -->
-    <div class="nav">
         <a href="/" class="active">داشبورد</a>
         <a href="/students-page">دانش‌آموزان</a>
         <a href="/teachers-page">معلمان</a>
@@ -73,71 +21,52 @@
         <a href="/results-page">نمرات</a>
         <a href="/teacher-assignments">تخصیص مضامین</a>
         <a href="/attendance-page">حاضری</a>
+        <a href="#" onclick="logout()" style="color: #ef4444; margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px;">خروج از حساب</a>
     </div>
 
-    <h1>داشبورد مدیریت</h1>
-    
-    <div class="stats" id="stats-output">در حال بارگذاری...</div>
-
-    <div class="grid-2">
-        <div class="box">
-            <h3>آخرین دانش‌آموزان</h3>
-            <div id="recent-students">...</div>
+    <!-- محتوای اصلی -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 style="font-size: 20px; color: var(--primary);">داشبورد مدیریت</h1>
+            </div>
+            <div class="profile">
+                <span id="profileName">مدیر سیستم</span>
+                <div class="avatar">A</div>
+            </div>
         </div>
 
-        <div class="box">
-            <h3>آخرین نمرات ثبت‌شده</h3>
-            <div id="recent-results">...</div>
+        <div class="stats-grid" id="stats-output">
+            <!-- کارت‌ها اینجا لود می‌شن -->
         </div>
 
-        <div class="box" style="grid-column: 1 / -1;">
-            <h3>توزیع دانش‌آموزان در صنف‌ها</h3>
-            <div id="class-chart">...</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card">
+                <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 16px;">آخرین دانش‌آموزان</h3>
+                <div id="recent-students">...</div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 15px; color: var(--primary); font-size: 16px;">آخرین نمرات</h3>
+                <div id="recent-results">...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // ۱. چک کردن لاگین بودن
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
-        
-        if (!token || role !== 'admin') {
-            window.location.href = '/login';
-        }
+        if (!token || role !== 'admin') window.location.href = '/login';
 
-        // ۲. تنظیمات منوی پروفایل
-        document.addEventListener('DOMContentLoaded', () => {
-            const profileName = document.getElementById('profileName');
-            const avatarLetter = document.getElementById('avatarLetter');
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
 
-            if (role === 'admin') {
-                profileName.innerText = 'مدیر سیستم';
-                avatarLetter.innerText = 'A';
-            } else if (role === 'teacher') {
-                profileName.innerText = 'استاد';
-                avatarLetter.innerText = 'T';
-            } else if (role === 'student') {
-                profileName.innerText = 'دانش‌آموز';
-                avatarLetter.innerText = 'S';
-            }
-        });
-
-        function toggleProfileMenu() {
-            const menu = document.getElementById('profileMenu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
-        }
-
-        // ۳. بارگذاری اطلاعات داشبورد
         async function loadDashboard() {
             try {
-                const response = await fetch('https://alkozay-school-app.onrender.com/dashboard/');
+                const response = await fetch('/dashboard/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
                 const data = await response.json();
                 
+                // آمار
                 let statsHtml = '';
                 statsHtml += `<div class="stat-card"><div class="number">${data.total.students}</div><div class="label">دانش‌آموزان</div></div>`;
                 statsHtml += `<div class="stat-card"><div class="number">${data.total.teachers}</div><div class="label">معلمان</div></div>`;
@@ -146,45 +75,28 @@
                 statsHtml += `<div class="stat-card"><div class="number">${data.total.enrollments}</div><div class="label">ثبت‌نام‌ها</div></div>`;
                 document.getElementById('stats-output').innerHTML = statsHtml;
 
+                // آخرین دانش‌آموزان
                 let studentsHtml = '';
-                if (data.recent_students.length === 0) studentsHtml = '<div style="color:#777">موردی یافت نشد.</div>';
+                if (data.recent_students.length === 0) studentsHtml = '<div style="color:#64748b">موردی یافت نشد.</div>';
                 data.recent_students.forEach(s => {
-                    studentsHtml += `<div class="list-item"><span>${s.name}</span></div>`;
+                    studentsHtml += `<div style="padding: 10px 0; border-bottom: 1px solid var(--border);">${s.name}</div>`;
                 });
                 document.getElementById('recent-students').innerHTML = studentsHtml;
 
+                // آخرین نمرات
                 let resultsHtml = '';
-                if (data.recent_results.length === 0) resultsHtml = '<div style="color:#777">موردی یافت نشد.</div>';
+                if (data.recent_results.length === 0) resultsHtml = '<div style="color:#64748b">موردی یافت نشد.</div>';
                 data.recent_results.forEach(r => {
-                    resultsHtml += `<div class="list-item"><span>${r.student_name} (${r.subject_name})</span><span class="val">${r.score}</span></div>`;
+                    resultsHtml += `<div style="padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span>${r.student_name} (${r.subject_name})</span><b>${r.score}</b></div>`;
                 });
                 document.getElementById('recent-results').innerHTML = resultsHtml;
-
-                let chartHtml = '';
-                if (data.class_distribution.length === 0) chartHtml = '<div style="color:#777">موردی یافت نشد.</div>';
-                
-                let maxCount = Math.max(...data.class_distribution.map(c => c.count), 1);
-
-                data.class_distribution.forEach(c => {
-                    const percent = (c.count / maxCount) * 100;
-                    chartHtml += `
-                        <div class="bar-container">
-                            <div class="bar-label"><span>${c.class_name}</span><span>${c.count} نفر</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%"></div></div>
-                        </div>
-                    `;
-                });
-                document.getElementById('class-chart').innerHTML = chartHtml;
 
             } catch (error) {
                 document.getElementById('stats-output').innerHTML = `<div style="color:red">خطا در دریافت اطلاعات</div>`;
             }
         }
-        
-        // اجرای اولیه
-        if (token && role === 'admin') {
-            loadDashboard();
-        }
+
+        if (token && role === 'admin') loadDashboard();
     </script>
 </body>
 </html>
