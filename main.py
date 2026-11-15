@@ -44,7 +44,7 @@ app.include_router(attendance_router)
 app.include_router(upload_router)
 
 # مسیر اصلی پوشه
-BASE_DIR = "/storage/emulated/0/School management"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # آدرس‌های صفحات HTML
 @app.get("/")
