@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اطلاعنامه</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        body { background: #e9ecef; padding: 20px; display: flex; justify-content: center; }
+        
+        .page { background: white; width: 100%; max-width: 21cm; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* هدر */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 10px; }
+        .header .logo { width: 60px; height: 60px; border: 1px solid #ccc; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 10px; color: #777; }
+        .header .center-text { text-align: center; }
+        .header .center-text h3 { font-size: 14px; color: #2c3e50; }
+        .header .center-text h2 { font-size: 16px; color: #2c3e50; }
+        .header .center-text p { font-size: 11px; color: #555; }
+
+        .title-bar { text-align: center; border: 1px solid #2c3e50; background: #f8f9fa; padding: 5px; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .student-info { font-size: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; color: #333; }
+
+        /* جدول اصلی */
+        .grid-table { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: 1px; background: #ccc; border: 1px solid #ccc; margin-bottom: 10px; }
+        .grid-table > div { background: white; padding: 6px; text-align: center; font-size: 11px; }
+        .grid-table .head { background: #2c3e50; color: white; font-weight: bold; }
+        .grid-table .subject { text-align: right; font-weight: bold; color: #2c3e50; }
+
+        .footer-table { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: #ccc; border: 1px solid #ccc; }
+        .footer-table > div { background: white; padding: 10px; text-align: center; font-size: 11px; height: 60px; display: flex; align-items: flex-end; justify-content: center; color: #555; }
+
+        .print-btn { position: fixed; top: 20px; left: 20px; background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: Tahoma; }
+        
+        @media print {
+            @page { size: A4; margin: 0.5cm; }
+            body { background: white; padding: 0; }
+            .print-btn { display: none; }
+            .page { box-shadow: none; width: 100%; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">چاپ اطلاعنامه</button>
+
+    <div class="page">
+        <div class="header">
+            <div class="logo">لوگو</div>
+            <div class="center-text">
+                <h3>امارت اسلامی افغانستان</h3>
+                <h2>وزارت معارف</h2>
+                <p>ریاست معارف ولایت ... | مدیریت معارف و انکشاف مسلکی | لیسه/مکتب ...</p>
+            </div>
+            <div class="logo">لوگو</div>
+        </div>
+
+        <div class="title-bar">اطلاعنامه (صنف <span id="rClass"></span>) سال تعلیمی (<span id="rYear"></span>)</div>
+        
+        <div class="student-info">
+            <div>اسم (شهرت): <b id="rStudentName"></b> | ولد: <b id="rFatherName"></b> | ولدیت: <b id="rGrandfatherName"></b></div>
+            <div>شماره دانش‌آموزی: <b id="rNumber"></b></div>
+        </div>
+
+        <!-- جدول نمرات (Grid) -->
+        <div class="grid-table">
+            <div class="head">مضامین</div>
+            <div class="head">امتحان سالانه (۶۰)</div>
+            <div class="head">امتحان وسط سال (۴۰)</div>
+            <div class="head">مجموعه</div>
+            <div class="head">حاضر</div>
+            <div class="head">غیرحاضر</div>
+            <div class="head">رخصت</div>
+            <div class="head">مریض</div>
+            
+            <div id="rTableBody" style="display: contents;"></div>
+        </div>
+
+        <div class="footer-table">
+            <div>امضای معلم</div>
+            <div>امضای مدیر</div>
+            <div>امضای ولی</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const enrollmentId = urlParams.get('id');
+
+        async function loadReport() {
+            if (!enrollmentId) { alert('آیدی یافت نشد'); return; }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/results/report/${enrollmentId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'خطا');
+
+                document.getElementById('rStudentName').innerText = data.enrollment.student_name;
+                document.getElementById('rFatherName').innerText = data.enrollment.father_name || '-';
+                document.getElementById('rGrandfatherName').innerText = data.enrollment.grandfather_name || '-';
+                document.getElementById('rNumber').innerText = data.enrollment.student_number || '-';
+                document.getElementById('rClass').innerText = data.enrollment.class_name;
+                document.getElementById('rYear').innerText = data.enrollment.academic_year;
+
+                // ساخت ردیف‌ها با Grid
+                let html = '';
+                data.subjects.forEach(s => {
+                    html += `
+                        <div class="subject">${s.subject_name}</div>
+                        <div>${s.annual_score !== null ? s.annual_score : '-'}</div>
+                        <div>${s.midyear_score !== null ? s.midyear_score : '-'}</div>
+                        <div>${s.total_score !== 0 ? s.total_score : '-'}</div>
+                        <div>${data.attendance.present}</div>
+                        <div>${data.attendance.absent}</div>
+                        <div>0</div>
+                        <div>0</div>
+                    `;
+                });
+                document.getElementById('rTableBody').innerHTML = html;
+
+            } catch (error) {
+                alert('خطا: ' + error.message);
+            }
+        }
+
+        loadReport();
+    </script>
+</body>
+</html>

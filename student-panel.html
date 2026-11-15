@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل دانش‌آموز</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        body { background-color: #f4f6f8; padding: 20px; color: #333; }
+        
+        .top-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; position: relative; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; }
+        .avatar { width: 35px; height: 35px; background: #2c3e50; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .profile-menu { display: none; position: absolute; top: 50px; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; width: 150px; }
+        .profile-menu a { display: block; padding: 10px; text-decoration: none; color: #333; font-size: 14px; text-align: right; }
+        .profile-menu a:hover { background: #f4f6f8; }
+
+        .header { background: #2c3e50; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { font-size: 18px; font-weight: normal; }
+        .header span { font-size: 14px; color: #bdc3c7; }
+
+        .menu-btn { display: block; background: white; text-decoration: none; color: #2c3e50; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e0e0e0; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .menu-btn:hover { background: #f8f9fa; }
+
+        .info-card { background: white; padding: 20px; border-radius: 6px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        .info-card h3 { color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; font-size: 16px; }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #777; font-size: 14px; }
+        .info-value { font-weight: bold; color: #333; font-size: 14px; }
+
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 15px; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; color: #2c3e50; font-weight: bold; border-bottom: 2px solid #ddd; }
+        
+        .btn-print { display: block; text-align: center; background: #27ae60; color: white; text-decoration: none; padding: 12px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="user-profile" onclick="openFilePicker()">
+            <span id="profileName">دانش‌آموز</span>
+            <img id="profilePic" src="" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; display: none; border: 2px solid #2c3e50;">
+            <div class="avatar" id="avatarLetter">S</div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="uploadProfilePic(this)">
+        </div>
+        <div class="profile-menu" id="profileMenu" style="display: none;">
+            <a href="#" onclick="logout()" style="color: #e74c3c;">خروج از حساب</a>
+        </div>
+    </div>
+
+    <div class="header">
+        <h2>پنل دانش‌آموز</h2>
+        <span>سال تحصیلی ۱۴۰۵</span>
+    </div>
+
+    <a class="menu-btn" onclick="showInfo()">
+        <span>اطلاعات من</span>
+        <span>👤</span>
+    </a>
+    <a class="menu-btn" id="reportLink" style="display:none;">
+        <span>مشاهده اطلاعنامه (کارنامه)</span>
+        <span>📄</span>
+    </a>
+    <a class="menu-btn" onclick="showGrades()">
+        <span>نمرات من</span>
+        <span>📊</span>
+    </a>
+
+    <div id="infoSection" class="info-card">
+        <h3>اطلاعات شخصی</h3>
+        <div class="info-row"><span class="info-label">نام:</span><span class="info-value" id="sName">در حال بارگذاری...</span></div>
+        <div class="info-row"><span class="info-label">نام پدر:</span><span class="info-value" id="sFather">-</span></div>
+        <div class="info-row"><span class="info-label">صنف:</span><span class="info-value" id="sClass">-</span></div>
+        <div class="info-row"><span class="info-label">شماره دانش‌آموزی:</span><span class="info-value" id="sNumber">-</span></div>
+    </div>
+
+    <div id="gradesSection" style="display:none;">
+        <h3 style="color:#2c3e50; margin-bottom:10px;">نمرات (خلاصه)</h3>
+        <div id="gradesTable">در حال دریافت...</div>
+    </div>
+
+    <script>
+        // ذخیره‌ی fetch اصلی برای استفاده در آپلود فایل
+        window.originalFetch = window.fetch;
+
+        // بازنویسی fetch برای ارسال توکن
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (!config) config = {};
+            if (!config.headers) config.headers = {};
+            const token = localStorage.getItem('token');
+            if (token) config.headers['Authorization'] = 'Bearer ' + token;
+            if (!config.headers['Content-Type'] && config.method && config.method !== 'GET') config.headers['Content-Type'] = 'application/json';
+            return originalFetch(resource, config);
+        };
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        if (!token || role !== 'student') {
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('profileName').innerText = 'دانش‌آموز';
+            document.getElementById('avatarLetter').innerText = 'S';
+        });
+
+        function openFilePicker() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function uploadProfilePic(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    // استفاده از fetch اصلی برای جلوگیری از هدر Content-Type خودکار
+                    const res = await window.originalFetch('http://127.0.0.1:8000/upload/profile-picture', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+                    
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'خطا در آپلود');
+                    }
+                    
+                    const data = await res.json();
+
+                    const img = document.getElementById('profilePic');
+                    img.src = 'http://127.0.0.1:8000/uploads/' + data.filename;
+                    img.style.display = 'block';
+                    document.getElementById('avatarLetter').style.display = 'none';
+
+                } catch (e) {
+                    alert('❌ ' + e.message);
+                }
+            }
+        }
+
+        function toggleProfileMenu() { const m = document.getElementById('profileMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+        
+        function showInfo() {
+            document.getElementById('infoSection').style.display = 'block';
+            document.getElementById('gradesSection').style.display = 'none';
+        }
+
+        function showGrades() {
+            document.getElementById('infoSection').style.display = 'none';
+            document.getElementById('gradesSection').style.display = 'block';
+        }
+
+        async function loadStudentData() {
+            try {
+                const enrollmentRes = await fetch('http://127.0.0.1:8000/students/me/enrollment');
+                const enrollmentData = await enrollmentRes.json();
+                
+                if (!enrollmentRes.ok) throw new Error(enrollmentData.detail || 'خطا');
+                
+                const MY_ENROLLMENT_ID = enrollmentData.enrollment_id; 
+
+                const response = await fetch(`http://127.0.0.1:8000/results/report/${MY_ENROLLMENT_ID}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.detail || 'خطا');
+
+                document.getElementById('sName').innerText = data.enrollment.student_name;
+                document.getElementById('sFather').innerText = data.enrollment.father_name || 'ثبت نشده';
+                document.getElementById('sClass').innerText = data.enrollment.class_name;
+                document.getElementById('sNumber').innerText = data.enrollment.student_number || 'ثبت نشده';
+
+                const reportLink = document.getElementById('reportLink');
+                reportLink.href = `/report-card?id=${MY_ENROLLMENT_ID}`;
+                reportLink.style.display = 'flex';
+
+                let html = '<table><tr><th>مضمون</th><th>وسط سال</th><th>سالانه</th><th>مجموع</th></tr>';
+                data.subjects.forEach(sub => {
+                    html += `<tr>
+                        <td>${sub.subject_name}</td>
+                        <td>${sub.midyear_score !== null ? sub.midyear_score : '-'}</td>
+                        <td>${sub.annual_score !== null ? sub.annual_score : '-'}</td>
+                        <td><b>${sub.total_score}</b></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                html += `<a href="/report-card?id=${MY_ENROLLMENT_ID}" class="btn-print">مشاهده و چاپ اطلاعنامه کامل</a>`;
+                
+                document.getElementById('gradesTable').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('sName').innerText = 'خطا: ' + error.message;
+            }
+        }
+
+        if (token && role === 'student') {
+            loadStudentData();
+        }
+    </script>
+</body>
+</html>

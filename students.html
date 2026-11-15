@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت دانش‌آموزان</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        body { background-color: #f4f6f8; padding: 20px; color: #333; }
+        .top-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; position: relative; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; }
+        .avatar { width: 35px; height: 35px; background: #2c3e50; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .profile-menu { display: none; position: absolute; top: 50px; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; width: 150px; }
+        .profile-menu a { display: block; padding: 10px; text-decoration: none; color: #333; font-size: 14px; text-align: right; }
+        .profile-menu a:hover { background: #f4f6f8; }
+        .nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .nav a { text-decoration: none; background: #fff; color: #555; padding: 8px 16px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; }
+        .nav a.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        h1 { color: #2c3e50; font-size: 22px; }
+        .btn-add { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: Tahoma; }
+        .form-box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 20px; display: none; }
+        .form-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-family: Tahoma; }
+        .btn-submit { background: #27ae60; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-family: Tahoma; width: 100%; }
+        .msg { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; display: none; }
+        .msg.success { background: #d4edda; color: #155724; }
+        .msg.error { background: #f8d7da; color: #721c24; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; color: #2c3e50; border-bottom: 2px solid #ddd; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-family: Tahoma; font-size: 12px; margin-left: 5px; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="user-profile" onclick="toggleProfileMenu()">
+            <span id="profileName">در حال بارگذاری...</span>
+            <div class="avatar" id="avatarLetter">U</div>
+        </div>
+        <div class="profile-menu" id="profileMenu">
+            <a href="#" onclick="logout()" style="color: #e74c3c;">خروج از حساب</a>
+        </div>
+    </div>
+
+    <div class="nav">
+        <a href="/">داشبورد</a>
+        <a href="/students-page" class="active">دانش‌آموزان</a>
+        <a href="/teachers-page">معلمان</a>
+        <a href="/classes-page">صنف‌ها</a>
+        <a href="/subjects-page">مضامین</a>
+        <a href="/enrollments-page">ثبت‌نام‌ها</a>
+        <a href="/results-page">نمرات</a>
+        <a href="/teacher-assignments">تخصیص مضامین</a>
+    </div>
+
+    <div class="header-action">
+        <h1>مدیریت دانش‌آموزان</h1>
+        <button class="btn-add" onclick="toggleForm()">افزودن دانش‌آموز</button>
+    </div>
+
+    <div class="form-box" id="addForm">
+        <div class="msg" id="message"></div>
+        <input type="hidden" id="editId" value="">
+        <input type="text" id="studentName" placeholder="نام کامل دانش‌آموز">
+        <input type="text" id="studentUsername" placeholder="نام کاربری">
+        <input type="text" id="studentPassword" placeholder="رمز عبور">
+        <button class="btn-submit" id="submitBtn" onclick="submitForm()">ثبت دانش‌آموز</button>
+    </div>
+    
+    <div id="output">در حال دریافت اطلاعات...</div>
+
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (!config) config = {};
+            if (!config.headers) config.headers = {};
+            const token = localStorage.getItem('token');
+            if (token) config.headers['Authorization'] = 'Bearer ' + token;
+            if (!config.headers['Content-Type'] && config.method && config.method !== 'GET') {
+                config.headers['Content-Type'] = 'application/json';
+            }
+            return originalFetch(resource, config);
+        };
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        if (!token || role !== 'admin') window.location.href = '/login';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('profileName').innerText = 'مدیر سیستم';
+            document.getElementById('avatarLetter').innerText = 'A';
+        });
+
+        function toggleProfileMenu() { const m = document.getElementById('profileMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+        function toggleForm() { const f = document.getElementById('addForm'); f.style.display = (f.style.display === 'block') ? 'none' : 'block'; }
+
+        async function submitForm() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('studentName').value.trim();
+            const username = document.getElementById('studentUsername').value.trim();
+            const password = document.getElementById('studentPassword').value.trim();
+            const msg = document.getElementById('message');
+
+            if (name === '') { msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'نام را وارد کنید.'; return; }
+
+            let url = 'http://127.0.0.1:8000/students/';
+            let method = 'POST';
+            let bodyData = { name: name };
+            
+            if (id !== '') { url += id; method = 'PUT'; } 
+            else {
+                if (!username || !password) { msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'نام کاربری و رمز الزامی است.'; return; }
+                bodyData.username = username;
+                bodyData.password = password;
+            }
+
+            try {
+                const response = await fetch(url, { method: method, body: JSON.stringify(bodyData) });
+                if (!response.ok) { const err = await response.json(); throw new Error(err.detail || 'خطا'); }
+                msg.className = 'msg success'; msg.style.display = 'block'; 
+                msg.innerText = id !== '' ? '✅ ویرایش شد!' : '✅ ثبت شد!';
+                document.getElementById('studentName').value = '';
+                document.getElementById('studentUsername').value = '';
+                document.getElementById('studentPassword').value = '';
+                document.getElementById('editId').value = '';
+                document.getElementById('submitBtn').innerText = 'ثبت دانش‌آموز';
+                document.getElementById('submitBtn').style.background = '#27ae60';
+                loadStudents(); 
+            } catch (error) { msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = '❌ ' + error.message; }
+        }
+
+        function editStudent(id, name) {
+            document.getElementById('addForm').style.display = 'block';
+            document.getElementById('editId').value = id;
+            document.getElementById('studentName').value = name;
+            document.getElementById('submitBtn').innerText = 'ذخیره تغییرات';
+            document.getElementById('submitBtn').style.background = '#f39c12';
+            window.scrollTo(0, 0);
+        }
+
+        async function deleteStudent(id) {
+            if (!confirm('آیا مطمئن هستید؟')) return;
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/students/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('خطا در حذف');
+                loadStudents(); 
+            } catch (error) { alert('❌ ' + error.message); }
+        }
+
+        async function loadStudents() {
+            const output = document.getElementById('output');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/students/');
+                const students = await response.json();
+                let html = '<table><tr><th>شماره</th><th>نام</th><th>وضعیت</th><th>عملیات</th></tr>';
+                students.forEach((student, index) => {
+                    html += `<tr><td>${index + 1}</td><td>${student.name}</td><td><span style="color:green">فعال</span></td><td><button class="action-btn btn-edit" onclick="editStudent(${student.id}, '${student.name}')">ویرایش</button><button class="action-btn btn-delete" onclick="deleteStudent(${student.id})">حذف</button></td></tr>`;
+                });
+                html += '</table>'; output.innerHTML = html;
+            } catch (error) { output.innerHTML = `<div style="color:red">خطا در دریافت اطلاعات</div>`; }
+        }
+        
+        if (token && role === 'admin') loadStudents();
+    </script>
+</body>
+</html>

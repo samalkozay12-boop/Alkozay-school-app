@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تخصیص مضامین</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        body { background-color: #f4f6f8; padding: 20px; color: #333; }
+        .top-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; position: relative; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; }
+        .avatar { width: 35px; height: 35px; background: #2c3e50; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .profile-menu { display: none; position: absolute; top: 50px; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; width: 150px; }
+        .profile-menu a { display: block; padding: 10px; text-decoration: none; color: #333; font-size: 14px; text-align: right; }
+        .profile-menu a:hover { background: #f4f6f8; }
+        .nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .nav a { text-decoration: none; background: #fff; color: #555; padding: 8px 16px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; }
+        .nav a.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+        h1 { color: #2c3e50; font-size: 22px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; font-family: Tahoma; }
+        .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .checkbox-item input { width: auto; }
+        .btn-submit { background: #2c3e50; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-family: Tahoma; width: 100%; font-weight: bold; }
+        .msg { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; display: none; }
+        .msg.success { background: #d4edda; color: #155724; }
+        .msg.error { background: #f8d7da; color: #721c24; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 15px; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; color: #2c3e50; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-family: Tahoma; font-size: 12px; }
+        .btn-delete { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="user-profile" onclick="toggleProfileMenu()">
+            <span id="profileName">در حال بارگذاری...</span>
+            <div class="avatar" id="avatarLetter">U</div>
+        </div>
+        <div class="profile-menu" id="profileMenu">
+            <a href="#" onclick="logout()" style="color: #e74c3c;">خروج از حساب</a>
+        </div>
+    </div>
+    <div class="nav">
+        <a href="/">داشبورد</a>
+        <a href="/students-page">دانش‌آموزان</a>
+        <a href="/teachers-page">معلمان</a>
+        <a href="/classes-page">صنف‌ها</a>
+        <a href="/subjects-page">مضامین</a>
+        <a href="/enrollments-page">ثبت‌نام‌ها</a>
+        <a href="/results-page">نمرات</a>
+        <a href="/teacher-assignments" class="active">تخصیص مضامین</a>
+        <a href="/attendance-page">حاضری</a>
+    </div>
+    <h1>تخصیص مضامین به معلمان</h1>
+    <div class="box">
+        <div class="msg" id="message"></div>
+        <label>انتخاب معلم</label>
+        <select id="teacherSelect" onchange="loadAssignments()"><option value="">در حال بارگذاری...</option></select>
+        <label>انتخاب صنف</label>
+        <select id="classSelect"><option value="">در حال بارگذاری...</option></select>
+        <label>مضامین (چند مورد را می‌توانید انتخاب کنید)</label>
+        <div class="checkbox-group" id="subjectsContainer"></div>
+        <button class="btn-submit" onclick="saveAssignments()">ثبت تخصیص‌ها</button>
+    </div>
+    <div id="currentAssignments"></div>
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (!config) config = {};
+            if (!config.headers) config.headers = {};
+            const token = localStorage.getItem('token');
+            if (token) config.headers['Authorization'] = 'Bearer ' + token;
+            if (!config.headers['Content-Type'] && config.method && config.method !== 'GET') config.headers['Content-Type'] = 'application/json';
+            return originalFetch(resource, config);
+        };
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (!token || role !== 'admin') window.location.href = '/login';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('profileName').innerText = 'مدیر سیستم';
+            document.getElementById('avatarLetter').innerText = 'A';
+        });
+        function toggleProfileMenu() { const m = document.getElementById('profileMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+        async function loadInitialData() {
+            try {
+                const tRes = await fetch('http://127.0.0.1:8000/teachers/');
+                const teachers = await tRes.json();
+                let tHtml = '<option value="">انتخاب کنید...</option>';
+                teachers.forEach(t => tHtml += `<option value="${t.id}">${t.name}</option>`);
+                document.getElementById('teacherSelect').innerHTML = tHtml;
+
+                const cRes = await fetch('http://127.0.0.1:8000/classes/');
+                const classes = await cRes.json();
+                let cHtml = '<option value="">انتخاب کنید...</option>';
+                classes.forEach(c => cHtml += `<option value="${c.id}">${c.class_name}</option>`);
+                document.getElementById('classSelect').innerHTML = cHtml;
+
+                const sRes = await fetch('http://127.0.0.1:8000/subjects/');
+                const subjects = await sRes.json();
+                let sHtml = '';
+                subjects.forEach(s => { sHtml += `<label class="checkbox-item"><input type="checkbox" value="${s.id}" class="subject-check"> ${s.name}</label>`; });
+                document.getElementById('subjectsContainer').innerHTML = sHtml;
+            } catch (e) { alert('خطا در بارگذاری'); }
+        }
+
+        async function saveAssignments() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            const classId = document.getElementById('classSelect').value;
+            const checkboxes = document.querySelectorAll('.subject-check:checked');
+            const msg = document.getElementById('message');
+            
+            if (!teacherId || !classId || checkboxes.length === 0) { 
+                msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'همه موارد را انتخاب کنید.'; return; 
+            }
+            
+            let success = 0;
+            for (let cb of checkboxes) {
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/teacher-subjects/', {
+                        method: 'POST',
+                        body: JSON.stringify({ teacher_id: parseInt(teacherId), subject_id: parseInt(cb.value), class_id: parseInt(classId) })
+                    });
+                    if (res.ok) success++;
+                } catch (e) {}
+            }
+            msg.className = 'msg success'; msg.style.display = 'block'; msg.innerText = `✅ ${success} مورد تخصیص داده شد.`;
+            document.querySelectorAll('.subject-check').forEach(cb => cb.checked = false);
+            loadAssignments();
+        }
+
+        async function loadAssignments() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            const container = document.getElementById('currentAssignments');
+            if (!teacherId) { container.innerHTML = ''; return; }
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/teacher-subjects/teacher/${teacherId}`);
+                const data = await res.json();
+                if (data.length === 0) { container.innerHTML = '<div class="box" style="color:#777">هیچ تخصیصی ثبت نشده است.</div>'; return; }
+                
+                let html = '<div class="box"><h3 style="margin-bottom:10px; font-size:15px;">تخصیص‌های فعلی</h3><table><tr><th>صنف</th><th>مضمون</th><th>عملیات</th></tr>';
+                data.forEach(a => { 
+                    html += `<tr>
+                        <td>${a.class_name}</td>
+                        <td>${a.subject_name}</td>
+                        <td><button class="action-btn btn-delete" onclick="deleteAssignment(${a.id})">حذف</button></td>
+                    </tr>`; 
+                });
+                html += '</table></div>'; container.innerHTML = html;
+            } catch (e) { container.innerHTML = ''; }
+        }
+
+        async function deleteAssignment(id) {
+            if (!confirm('آیا مطمئن هستید؟')) return;
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/teacher-subjects/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('خطا در حذف');
+                loadAssignments(); // رفرش لیست
+            } catch (e) { alert('❌ ' + e.message); }
+        }
+
+        if (token && role === 'admin') loadInitialData();
+    </script>
+</body>
+</html>

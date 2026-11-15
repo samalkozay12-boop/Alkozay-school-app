@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت و مدیریت نمرات</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        body { background-color: #f4f6f8; padding: 20px; color: #333; }
+        .top-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; position: relative; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 20px; border: 1px solid #ddd; }
+        .avatar { width: 35px; height: 35px; background: #2c3e50; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .profile-menu { display: none; position: absolute; top: 50px; left: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; width: 150px; }
+        .profile-menu a { display: block; padding: 10px; text-decoration: none; color: #333; font-size: 14px; text-align: right; }
+        .profile-menu a:hover { background: #f4f6f8; }
+        .nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .nav a { text-decoration: none; background: #fff; color: #555; padding: 8px 16px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; }
+        .nav a.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+        h1 { color: #2c3e50; font-size: 22px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .filter-box { background: white; padding: 20px; border-radius: 6px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: Tahoma; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; color: #2c3e50; font-weight: bold; border-bottom: 2px solid #ddd; }
+        .score-input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-family: Tahoma; }
+        .btn-save { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: Tahoma; margin-top: 15px; font-weight: bold; width: 100%; }
+        .action-btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-family: Tahoma; font-size: 12px; margin-left: 5px; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        .msg { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; display: none; font-size: 14px; }
+        .msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .msg.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="user-profile" onclick="toggleProfileMenu()">
+            <span id="profileName">در حال بارگذاری...</span>
+            <div class="avatar" id="avatarLetter">U</div>
+        </div>
+        <div class="profile-menu" id="profileMenu">
+            <a href="#" onclick="logout()" style="color: #e74c3c;">خروج از حساب</a>
+        </div>
+    </div>
+    <div class="nav">
+        <a href="/">داشبورد</a>
+        <a href="/students-page">دانش‌آموزان</a>
+        <a href="/teachers-page">معلمان</a>
+        <a href="/classes-page">صنف‌ها</a>
+        <a href="/subjects-page">مضامین</a>
+        <a href="/enrollments-page">ثبت‌نام‌ها</a>
+        <a href="/results-page" class="active">نمرات</a>
+        <a href="/teacher-assignments">تخصیص مضامین</a>
+        <a href="/attendance-page">حاضری</a>
+    </div>
+
+    <h1>مدیریت نمرات</h1>
+    <div class="msg" id="message"></div>
+
+    <div class="filter-box">
+        <div class="filter-row">
+            <div>
+                <label>صنف</label>
+                <select id="classSelect" onchange="loadResults()"><option value="">انتخاب صنف...</option></select>
+            </div>
+            <div>
+                <label>مضمون</label>
+                <select id="subjectSelect" onchange="loadResults()"><option value="">انتخاب مضمون...</option></select>
+            </div>
+            <div>
+                <label>نوع امتحان</label>
+                <select id="examType">
+                    <option value="midyear">وسط سال (حداکثر ۴۰)</option>
+                    <option value="annual">سالانه (حداکثر ۶۰)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="output">در حال دریافت اطلاعات...</div>
+
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (!config) config = {};
+            if (!config.headers) config.headers = {};
+            const token = localStorage.getItem('token');
+            if (token) config.headers['Authorization'] = 'Bearer ' + token;
+            if (!config.headers['Content-Type'] && config.method && config.method !== 'GET') config.headers['Content-Type'] = 'application/json';
+            return originalFetch(resource, config);
+        };
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        const userId = localStorage.getItem('user_id');
+        if (!token || (role !== 'admin' && role !== 'teacher')) window.location.href = '/login';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const profileName = document.getElementById('profileName');
+            const avatarLetter = document.getElementById('avatarLetter');
+            if (role === 'admin') { profileName.innerText = 'مدیر سیستم'; avatarLetter.innerText = 'A'; }
+            else if (role === 'teacher') { profileName.innerText = 'استاد'; avatarLetter.innerText = 'T'; }
+        });
+
+        function toggleProfileMenu() { const m = document.getElementById('profileMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+        async function loadData() {
+            try {
+                const classSelect = document.getElementById('classSelect');
+                const subjectSelect = document.getElementById('subjectSelect');
+                let classHtml = '<option value="">انتخاب صنف...</option>';
+                let subHtml = '<option value="">انتخاب مضمون...</option>';
+
+                if (role === 'admin') {
+                    const classRes = await fetch('http://127.0.0.1:8000/classes/');
+                    const classes = await classRes.json();
+                    classes.forEach(c => classHtml += `<option value="${c.id}">${c.class_name}</option>`);
+
+                    const subRes = await fetch('http://127.0.0.1:8000/subjects/');
+                    const subjects = await subRes.json();
+                    subjects.forEach(s => subHtml += `<option value="${s.id}">${s.name}</option>`);
+                } else if (role === 'teacher') {
+                    const assignRes = await fetch(`http://127.0.0.1:8000/teacher-subjects/teacher/${userId}`);
+                    const assignments = await assignRes.json();
+                    const uniqueClasses = [];
+                    const uniqueSubjects = [];
+                    assignments.forEach(a => {
+                        if (!uniqueClasses.some(c => c.id === a.class_id)) uniqueClasses.push({id: a.class_id, name: a.class_name});
+                        if (!uniqueSubjects.some(s => s.id === a.subject_id)) uniqueSubjects.push({id: a.subject_id, name: a.subject_name});
+                    });
+                    uniqueClasses.forEach(c => classHtml += `<option value="${c.id}">${c.name}</option>`);
+                    uniqueSubjects.forEach(s => subHtml += `<option value="${s.id}">${s.name}</option>`);
+                }
+                classSelect.innerHTML = classHtml;
+                subjectSelect.innerHTML = subHtml;
+            } catch (error) { alert('خطا در بارگذاری اطلاعات پایه'); }
+        }
+
+        async function loadResults() {
+            const classId = document.getElementById('classSelect').value;
+            const subjectId = document.getElementById('subjectSelect').value;
+            const examType = document.getElementById('examType').value;
+            const output = document.getElementById('output');
+
+            if (!classId || !subjectId) { output.innerHTML = '<div style="color:#777">لطفاً صنف و مضمون را انتخاب کنید.</div>'; return; }
+
+            try {
+                // ۱. گرفتن لیست دانش‌آموزان کلاس (برای ثبت نمره جدید)
+                const studentsRes = await fetch(`http://127.0.0.1:8000/classes/${classId}/students`);
+                const students = await studentsRes.json();
+
+                // ۲. گرفتن نمرات ثبت‌شده برای این کلاس و مضمون
+                const resultsRes = await fetch(`http://127.0.0.1:8000/results/class/${classId}/subject/${subjectId}`);
+                const results = await resultsRes.json();
+
+                if (students.length === 0) { output.innerHTML = '<div style="color:#777">دانش‌آموزی در این صنف نیست.</div>'; return; }
+
+                let html = '<table><tr><th>شماره</th><th>نام دانش‌آموز</th><th>وضعیت نمره</th><th>عملیات</th></tr>';
+                
+                students.forEach((s, index) => {
+                    // پیدا کردن نمره ثبت‌شده برای این دانش‌آموز
+                    const existing = results.find(r => r.enrollment_id === s.enrollment_id && r.exam_type === examType);
+                    
+                    let statusHtml = '';
+                    let actionHtml = '';
+
+                    if (existing) {
+                        statusHtml = `<span style="color:green">ثبت شده: ${existing.score}</span>`;
+                        actionHtml = `
+                            <button class="action-btn btn-delete" onclick="deleteResult(${existing.result_id})">حذف</button>
+                        `;
+                    } else {
+                        statusHtml = `<input type="number" class="score-input" id="score_${s.enrollment_id}" min="0" max="60" placeholder="-">`;
+                        actionHtml = `
+                            <button class="action-btn btn-edit" onclick="saveSingleScore(${s.enrollment_id}, ${subjectId}, '${examType}')">ثبت</button>
+                        `;
+                    }
+
+                    html += `<tr>
+                        <td>${index + 1}</td>
+                        <td>${s.student_name}</td>
+                        <td>${statusHtml}</td>
+                        <td>${actionHtml}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                output.innerHTML = html;
+
+            } catch (error) { output.innerHTML = `<div style="color:red">خطا در دریافت اطلاعات</div>`; }
+        }
+
+        async function saveSingleScore(enrollmentId, subjectId, examType) {
+            const input = document.getElementById(`score_${enrollmentId}`);
+            const score = input.value;
+            const msg = document.getElementById('message');
+
+            if (score === '') { alert('نمره را وارد کنید.'); return; }
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/results/', {
+                    method: 'POST',
+                    body: JSON.stringify({ enrollment_id: parseInt(enrollmentId), subject_id: parseInt(subjectId), exam_type: examType, score: parseInt(score) })
+                });
+                if (!res.ok) throw new Error('خطا در ثبت');
+                msg.className = 'msg success'; msg.style.display = 'block'; msg.innerText = '✅ نمره ثبت شد!';
+                loadResults(); // رفرش
+            } catch (e) { alert('❌ ' + e.message); }
+        }
+
+        async function deleteResult(resultId) {
+            if (!confirm('آیا مطمئن هستید؟')) return;
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/results/${resultId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('خطا در حذف');
+                loadResults(); // رفرش
+            } catch (e) { alert('❌ ' + e.message); }
+        }
+
+        if (token) loadData();
+    </script>
+</body>
+</html>
