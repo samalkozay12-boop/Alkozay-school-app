@@ -98,7 +98,7 @@
             
             if (name === '') { msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'نام را وارد کنید.'; return; }
 
-            let url = 'http://127.0.0.1:8000/teachers/';
+            let url = 'https://alkozay-school-app.onrender.com/teachers/';
             let method = 'POST';
             
             if (id !== '') { url += id; method = 'PUT'; }
@@ -128,7 +128,7 @@
         async function deleteTeacher(id) {
             if (!confirm('آیا مطمئن هستید؟')) return;
             try {
-                const res = await fetch(`http://127.0.0.1:8000/teachers/${id}`, { method: 'DELETE' });
+                const res = await fetch(`https://alkozay-school-app.onrender.com/teachers/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('خطا در حذف');
                 loadTeachers();
             } catch (e) { alert('❌ ' + e.message); }
@@ -137,7 +137,7 @@
         async function loadTeachers() {
             const output = document.getElementById('output');
             try {
-                const res = await fetch('http://127.0.0.1:8000/teachers/');
+                const res = await fetch('https://alkozay-school-app.onrender.com/teachers/');
                 const teachers = await res.json();
                 let html = '<table><tr><th>شماره</th><th>نام معلم</th><th>وضعیت</th><th>عملیات</th></tr>';
                 teachers.forEach((t, index) => {

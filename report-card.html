@@ -94,7 +94,7 @@
             if (!enrollmentId) { alert('آیدی یافت نشد'); return; }
 
             try {
-                const response = await fetch(`http://127.0.0.1:8000/results/report/${enrollmentId}`, {
+                const response = await fetch(`https://alkozay-school-app.onrender.com/results/report/${enrollmentId}`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 const data = await response.json();

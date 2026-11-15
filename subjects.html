@@ -98,7 +98,7 @@
 
             if (name === '') { msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'نام را وارد کنید.'; return; }
 
-            let url = 'http://127.0.0.1:8000/subjects/';
+            let url = 'https://alkozay-school-app.onrender.com/subjects/';
             let method = 'POST';
             if (id !== '') { url += id; method = 'PUT'; }
 
@@ -127,7 +127,7 @@
         async function deleteSubject(id) {
             if (!confirm('آیا مطمئن هستید؟')) return;
             try {
-                const res = await fetch(`http://127.0.0.1:8000/subjects/${id}`, { method: 'DELETE' });
+                const res = await fetch(`https://alkozay-school-app.onrender.com/subjects/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('خطا در حذف');
                 loadSubjects();
             } catch (e) { alert('❌ ' + e.message); }
@@ -136,7 +136,7 @@
         async function loadSubjects() {
             const output = document.getElementById('output');
             try {
-                const res = await fetch('http://127.0.0.1:8000/subjects/');
+                const res = await fetch('https://alkozay-school-app.onrender.com/subjects/');
                 const subjects = await res.json();
                 let html = '<table><tr><th>شماره</th><th>نام مضمون</th><th>عملیات</th></tr>';
                 subjects.forEach((s, index) => {

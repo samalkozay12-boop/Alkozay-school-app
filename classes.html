@@ -102,7 +102,7 @@
                 msg.className = 'msg error'; msg.style.display = 'block'; msg.innerText = 'همه فیلدها الزامی است.'; return; 
             }
 
-            let url = 'http://127.0.0.1:8000/classes/';
+            let url = 'https://alkozay-school-app.onrender.com/classes/';
             let method = 'POST';
             if (id !== '') { url += id; method = 'PUT'; }
 
@@ -138,7 +138,7 @@
         async function deleteClass(id) {
             if (!confirm('آیا مطمئن هستید؟')) return;
             try {
-                const res = await fetch(`http://127.0.0.1:8000/classes/${id}`, { method: 'DELETE' });
+                const res = await fetch(`https://alkozay-school-app.onrender.com/classes/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('خطا در حذف');
                 loadClasses();
             } catch (e) { alert('❌ ' + e.message); }
@@ -147,7 +147,7 @@
         async function loadClasses() {
             const output = document.getElementById('output');
             try {
-                const res = await fetch('http://127.0.0.1:8000/classes/');
+                const res = await fetch('https://alkozay-school-app.onrender.com/classes/');
                 const classes = await res.json();
                 let html = '<table><tr><th>شماره</th><th>نام صنف</th><th>معلم</th><th>عملیات</th></tr>';
                 classes.forEach((c, index) => {

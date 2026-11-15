@@ -99,7 +99,7 @@
 
         async function loadClasses() {
             try {
-                const res = await fetch('http://127.0.0.1:8000/classes/');
+                const res = await fetch('https://alkozay-school-app.onrender.com/classes/');
                 const classes = await res.json();
                 let html = '<option value="">انتخاب صنف...</option>';
                 classes.forEach(c => html += `<option value="${c.id}">${c.class_name}</option>`);
@@ -115,7 +115,7 @@
             if (!classId || !date) { output.innerHTML = ''; return; }
 
             try {
-                const res = await fetch(`http://127.0.0.1:8000/attendance/class/${classId}/date/${date}`);
+                const res = await fetch(`https://alkozay-school-app.onrender.com/attendance/class/${classId}/date/${date}`);
                 const students = await res.json();
 
                 if (students.length === 0) {
@@ -156,7 +156,7 @@
                 const enrollmentId = sel.id.replace('status_', '');
                 const status = sel.value;
                 try {
-                    const res = await fetch('http://127.0.0.1:8000/attendance/', {
+                    const res = await fetch('https://alkozay-school-app.onrender.com/attendance/', {
                         method: 'POST',
                         body: JSON.stringify({ enrollment_id: parseInt(enrollmentId), date: date, status: status })
                     });

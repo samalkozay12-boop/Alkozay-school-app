@@ -92,19 +92,19 @@
 
         async function loadInitialData() {
             try {
-                const tRes = await fetch('http://127.0.0.1:8000/teachers/');
+                const tRes = await fetch('https://alkozay-school-app.onrender.com/teachers/');
                 const teachers = await tRes.json();
                 let tHtml = '<option value="">انتخاب کنید...</option>';
                 teachers.forEach(t => tHtml += `<option value="${t.id}">${t.name}</option>`);
                 document.getElementById('teacherSelect').innerHTML = tHtml;
 
-                const cRes = await fetch('http://127.0.0.1:8000/classes/');
+                const cRes = await fetch('https://alkozay-school-app.onrender.com/classes/');
                 const classes = await cRes.json();
                 let cHtml = '<option value="">انتخاب کنید...</option>';
                 classes.forEach(c => cHtml += `<option value="${c.id}">${c.class_name}</option>`);
                 document.getElementById('classSelect').innerHTML = cHtml;
 
-                const sRes = await fetch('http://127.0.0.1:8000/subjects/');
+                const sRes = await fetch('https://alkozay-school-app.onrender.com/subjects/');
                 const subjects = await sRes.json();
                 let sHtml = '';
                 subjects.forEach(s => { sHtml += `<label class="checkbox-item"><input type="checkbox" value="${s.id}" class="subject-check"> ${s.name}</label>`; });
@@ -125,7 +125,7 @@
             let success = 0;
             for (let cb of checkboxes) {
                 try {
-                    const res = await fetch('http://127.0.0.1:8000/teacher-subjects/', {
+                    const res = await fetch('https://alkozay-school-app.onrender.com/teacher-subjects/', {
                         method: 'POST',
                         body: JSON.stringify({ teacher_id: parseInt(teacherId), subject_id: parseInt(cb.value), class_id: parseInt(classId) })
                     });
@@ -142,7 +142,7 @@
             const container = document.getElementById('currentAssignments');
             if (!teacherId) { container.innerHTML = ''; return; }
             try {
-                const res = await fetch(`http://127.0.0.1:8000/teacher-subjects/teacher/${teacherId}`);
+                const res = await fetch(`https://alkozay-school-app.onrender.com/teacher-subjects/teacher/${teacherId}`);
                 const data = await res.json();
                 if (data.length === 0) { container.innerHTML = '<div class="box" style="color:#777">هیچ تخصیصی ثبت نشده است.</div>'; return; }
                 
@@ -161,7 +161,7 @@
         async function deleteAssignment(id) {
             if (!confirm('آیا مطمئن هستید؟')) return;
             try {
-                const res = await fetch(`http://127.0.0.1:8000/teacher-subjects/${id}`, { method: 'DELETE' });
+                const res = await fetch(`https://alkozay-school-app.onrender.com/teacher-subjects/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('خطا در حذف');
                 loadAssignments(); // رفرش لیست
             } catch (e) { alert('❌ ' + e.message); }

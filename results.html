@@ -115,15 +115,15 @@
                 let subHtml = '<option value="">انتخاب مضمون...</option>';
 
                 if (role === 'admin') {
-                    const classRes = await fetch('http://127.0.0.1:8000/classes/');
+                    const classRes = await fetch('https://alkozay-school-app.onrender.com/classes/');
                     const classes = await classRes.json();
                     classes.forEach(c => classHtml += `<option value="${c.id}">${c.class_name}</option>`);
 
-                    const subRes = await fetch('http://127.0.0.1:8000/subjects/');
+                    const subRes = await fetch('https://alkozay-school-app.onrender.com/subjects/');
                     const subjects = await subRes.json();
                     subjects.forEach(s => subHtml += `<option value="${s.id}">${s.name}</option>`);
                 } else if (role === 'teacher') {
-                    const assignRes = await fetch(`http://127.0.0.1:8000/teacher-subjects/teacher/${userId}`);
+                    const assignRes = await fetch(`https://alkozay-school-app.onrender.com/teacher-subjects/teacher/${userId}`);
                     const assignments = await assignRes.json();
                     const uniqueClasses = [];
                     const uniqueSubjects = [];
@@ -149,11 +149,11 @@
 
             try {
                 // ۱. گرفتن لیست دانش‌آموزان کلاس (برای ثبت نمره جدید)
-                const studentsRes = await fetch(`http://127.0.0.1:8000/classes/${classId}/students`);
+                const studentsRes = await fetch(`https://alkozay-school-app.onrender.com/classes/${classId}/students`);
                 const students = await studentsRes.json();
 
                 // ۲. گرفتن نمرات ثبت‌شده برای این کلاس و مضمون
-                const resultsRes = await fetch(`http://127.0.0.1:8000/results/class/${classId}/subject/${subjectId}`);
+                const resultsRes = await fetch(`https://alkozay-school-app.onrender.com/results/class/${classId}/subject/${subjectId}`);
                 const results = await resultsRes.json();
 
                 if (students.length === 0) { output.innerHTML = '<div style="color:#777">دانش‌آموزی در این صنف نیست.</div>'; return; }
@@ -200,7 +200,7 @@
             if (score === '') { alert('نمره را وارد کنید.'); return; }
 
             try {
-                const res = await fetch('http://127.0.0.1:8000/results/', {
+                const res = await fetch('https://alkozay-school-app.onrender.com/results/', {
                     method: 'POST',
                     body: JSON.stringify({ enrollment_id: parseInt(enrollmentId), subject_id: parseInt(subjectId), exam_type: examType, score: parseInt(score) })
                 });
@@ -213,7 +213,7 @@
         async function deleteResult(resultId) {
             if (!confirm('آیا مطمئن هستید؟')) return;
             try {
-                const res = await fetch(`http://127.0.0.1:8000/results/${resultId}`, { method: 'DELETE' });
+                const res = await fetch(`https://alkozay-school-app.onrender.com/results/${resultId}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('خطا در حذف');
                 loadResults(); // رفرش
             } catch (e) { alert('❌ ' + e.message); }
