@@ -43,3 +43,10 @@ def upload_profile_picture(file: UploadFile = File(...), current_user: dict = De
             conn.execute("UPDATE students SET profile_picture = ? WHERE id = ?", (unique_filename, user_id))
 
     return {"message": "عکس با موفقیت آپلود شد", "filename": unique_filename}
+    
+from database import create_tables
+
+@router.get('/fix-db')
+def fix_database():
+    create_tables()
+    return {"message": "Database tables created/updated successfully!"}
