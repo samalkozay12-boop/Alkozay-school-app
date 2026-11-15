@@ -84,6 +84,19 @@
     </div>
 
     <script>
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let [resource, config] = arguments;
+            if (!config) config = {};
+            if (!config.headers) config.headers = {};
+            const token = localStorage.getItem('token');
+            if (token) config.headers['Authorization'] = 'Bearer ' + token;
+            if (!config.headers['Content-Type'] && config.method && config.method !== 'GET') {
+                config.headers['Content-Type'] = 'application/json';
+            }
+            return originalFetch(resource, config);
+        };
+
         const token = localStorage.getItem('token');
         if (!token) window.location.href = '/login';
 
